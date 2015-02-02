@@ -6,30 +6,42 @@ import docker
 
 class Server():
 
-    services_type = ['mysql', 'mq', 'glance']
+    services_type = ['mysql', 'mq', 'glance', 'keystone']
 
     def __init__(self, host, port, etcd_ip, int_name = None):
-        self.name = int_name if int_name else "No name"
+        self.name = int_name if int_name else host
         self.host = host
         self.port = port
         self.etcd_ip = etcd_ip
         base_url = "http://%s:%s" % (host, port)
         self.connection = docker.Client(base_url=base_url)
         self.services = {}
+        self.roles = {}
         self.fab = Fabric()
+
+    def set_role(self, role_config):
+        self.roles.update(role_config)
 
     def create_service(self, name):
         if not self.__service_validate(name) or self.is_service_here(name):
             return False
-        self.services.update({name: True})
         try:
-            serv_obj = self.fab.get_service(name)(docker_cli=self.connection, etcd_ip=self.etcd_ip)
-        except:
-            print "Cannot get obj of service class %s" % name
-        serv_obj.update_env("HOST_IP", self.host)
-        serv_obj.start(host=self.host, port=self.port)
-        ## Some service processing
+            lxc_obj = self.fab.get_service(name)(name=name)
+        except Exception, e:
+            print e
+            return False
+        lxc_obj.update_env(key="HOST_IP",value=self.host)
+        lxc_obj.update_env(key='etcd', value=self.etcd_ip)
+        for key, value in self.roles[name].iteritems():
+            lxc_obj.update_env(key=key, value=value)
+        self.services.update({name: lxc_obj})
+        return True
 
+    def run_services(self):
+        print "My name is: %s" % self.name
+        print "Begin starting my services:"
+        for service, lxc in self.services.iteritems():
+            lxc.start()
 
     def get_service_status(self,name):
         if not self.__service_validate(name) or not self.is_service_here(name):

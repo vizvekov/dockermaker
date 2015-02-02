@@ -1,6 +1,6 @@
-__author__ = 'Вадим'
+__author__ = 'Vadim'
 
-from classes.galera import Galera
+from classes.container import Container
 
 
 class Fabric():
@@ -10,7 +10,7 @@ class Fabric():
         pass
 
     def get_service(self, name):
-        return Galera if name is "mysql" else False
+        return Container
 
     def __del__(self):
         pass

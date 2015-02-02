@@ -8,10 +8,29 @@ class Conf():
 
     def __init__(self,conf_path):
         self.Config = ConfigParser.ConfigParser()
-        self.Config.read(conf_path)
+        print self.Config.read(conf_path)
 
     def __del__(self):
         del self.Config
+
+    def __get_service_config(self,service_id):
+        service = self.ConfigSectionMap("service_%s" % service_id)
+        ret_val = {}
+        env = {}
+        for key, value in service.iteritems():
+            if key == "ports":
+                ret_val.update({"ports": value.split(',')})
+            else:
+                env.update({key: value})
+        ret_val.update(env)
+        return ret_val
+
+    def get_services(self):
+        service_dict = {}
+        for service_id in self.ConfigSectionMap("globals")["services"].split(','):
+            service_dict.update({service_id: self.__get_service_config(service_id)})
+        return service_dict
+
 
     def getservers(self):
         reObj = re.compile('server_')
