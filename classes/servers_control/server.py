@@ -1,6 +1,7 @@
 __author__ = 'subadmin'
 
 from classes.servers_control.fabric import Fabric
+from classes.console import Console
 import docker
 
 
@@ -13,8 +14,7 @@ class Server():
         self.host = host
         self.port = port
         self.etcd_ip = etcd_ip
-        base_url = "http://%s:%s" % (host, port)
-        self.connection = docker.Client(base_url=base_url)
+        self.base_url = "http://%s:%s" % (host, port)
         self.services = {}
         self.roles = {}
         self.fab = Fabric()
